@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "housing-api"
+version = "0.1.0"
+description = "API pour gérer des enregistrements de maisons."
+authors = ["koyan.laures-ribal@epita.fr"]
+readme = "README.md"
+
+# Définir les packages ici, directement sous [tool.poetry]
+packages = [
+    { include = "app" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.6"
+sqlalchemy = "^2.0.37"
+alembic = "^1.14.0"
+psycopg2-binary = "^2.9.10"
+python-dotenv = "^1.0.1"
+uvicorn = "^0.34.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
