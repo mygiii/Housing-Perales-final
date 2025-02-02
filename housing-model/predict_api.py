@@ -1,39 +1,39 @@
-import joblib
+import mlflow
+import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI
+from pydantic import BaseModel
+
+# Connect to MLflow
+mlflow.set_tracking_uri("http://mlflow_server:5000")
+
+# Load latest model from MLflow
+model_name = "California_Housing_Model"
+model = mlflow.sklearn.load_model(f"models:/{model_name}/latest")
+
+# Define expected input structure
+class HouseFeatures(BaseModel):
+    longitude: float
+    latitude: float
+    housing_median_age: float
+    total_rooms: float
+    total_bedrooms: float
+    population: float
+    households: float
+    median_income: float
+    ocean_proximity_INLAND: int = 0
+    ocean_proximity_NEAR_BAY: int = 0
+    ocean_proximity_NEAR_OCEAN: int = 0
+    ocean_proximity_ISLAND: int = 0
 
 app = FastAPI()
 
-# Charger le modèle et la liste de colonnes
-model = joblib.load("model/model.joblib")
-trained_columns = joblib.load("model/trained_columns.joblib")
-
 @app.post("/predict")
-def predict(data: dict):
-    """
-    data est un JSON contenant les features nécessaires au modèle.
-    Ex.:
-    {
-      "longitude": -122.23,
-      "latitude": 37.88,
-      "housing_median_age": 41,
-      "total_rooms": 880,
-      "total_bedrooms": 129,
-      "population": 322,
-      "households": 126,
-      "median_income": 8.3252,
-      "ocean_proximity_INLAND": 0,
-      "ocean_proximity_NEAR BAY": 1,
-      ...
-    }
-    """
-    # Convertir le dict en DataFrame
-    X_input = pd.DataFrame([data])
+def predict(features: HouseFeatures):
+    # Convert input data to DataFrame
+    data = pd.DataFrame([features.dict()])
 
-    # Réindexer pour forcer l'ordre (et la présence) des colonnes
-    # Les colonnes manquantes seront comblées par 0
-    X_input = X_input.reindex(columns=trained_columns, fill_value=0)
+    # Make prediction
+    prediction = model.predict(data)
 
-    # Prédiction
-    prediction = model.predict(X_input)[0]
-    return {"prediction": float(prediction)}
+    return {"predicted_value": float(prediction[0])}

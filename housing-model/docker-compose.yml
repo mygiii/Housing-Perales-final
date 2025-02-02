@@ -1,14 +1,29 @@
 version: "3.8"
 
 services:
+  mlflow_server:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: mlflow_server
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow_server:5000
+      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db
+      - MLFLOW_ARTIFACT_STORE=./mlruns
+    volumes:
+      - ./mlflow.db:/mlflow.db
+      - ./mlruns:/mlruns
+    command: mlflow server --backend-store-uri sqlite:///mlflow.db --host 0.0.0.0 --port 5000
+
   housing-model:
     build: .
     container_name: housing_model_container
-    # Publier le port 8001 externe => 8001 interne
+    depends_on:
+      - mlflow_server
     ports:
       - "8001:8001"
-    # La ligne de commande lance d'abord le script d'entraînement,
-    # puis démarre l'API (uvicorn).
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow_server:5000
     command: >
       sh -c "
       python train_model.py &&
