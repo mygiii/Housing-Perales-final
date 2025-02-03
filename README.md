@@ -2,7 +2,7 @@
 # Housing-Perales-final
 Celui là est le dernier repertoire que je créer
 =======
-# Housing API
+# Housing API test
 
 **Housing API** est une API développée avec **FastAPI** et **PostgreSQL**, déployée facilement avec **Docker**. Elle permet de gérer des enregistrements de maisons. Ce guide vous explique comment cloner le projet, le lancer avec Docker et tester l'API avec des exemples d'utilisation.
 
