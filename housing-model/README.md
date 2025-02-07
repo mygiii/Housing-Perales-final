@@ -39,6 +39,11 @@ curl -X POST \
   http://localhost:8001/predict
 ```
 
+### Utilisation de mlflow 
+
+Pour l'instant, mlflow n'est pas dockerisé, il y'a un fichier mlflow_proto.py qui lui marche en lançant en local
+
+
 ### Arrêt du Projet
 
 Pour arrêter les services :
