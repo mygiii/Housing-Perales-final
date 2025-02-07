@@ -1,10 +1,9 @@
-<<<<<<< HEAD
 # Housing-Perales-final
 Celui là est le dernier repertoire que je créer
 =======
-# Housing API test
+# Housing API
 
-**Housing API** est une API développée avec **FastAPI** et **PostgreSQL**, déployée facilement avec **Docker**. Elle permet de gérer des enregistrements de maisons. Ce guide vous explique comment cloner le projet, le lancer avec Docker et tester l'API avec des exemples d'utilisation.
+**Housing API** est une API développée avec **FastAPI** et **PostgreSQL**, déployée facilement avec **Docker**.
 
 ## Table des Matières
 
@@ -12,8 +11,6 @@ Celui là est le dernier repertoire que je créer
 2. [Lancer le Projet avec Docker](#2-lancer-le-projet-avec-docker)
 3. [Tester l'API avec cURL](#3-tester-lapi-avec-curl)
 4. [Notes Importantes](#4-notes-importantes)
-5. [Licence](#5-licence)
-
 ## 1. Cloner le Projet
 
 1. **Cloner le dépôt GitHub** :
@@ -35,10 +32,6 @@ Celui là est le dernier repertoire que je créer
    ```bash
    docker-compose up --build
    ```
-   
-   Cette commande :
-   - Construira les images Docker pour le projet
-   - Démarrera les services (API et base de données PostgreSQL)
 
 2. **Accéder à l'API** :
    - Une fois les conteneurs démarrés, l'API sera disponible sur [http://localhost:8001](http://localhost:8001)
@@ -185,10 +178,6 @@ Si vous rencontrez des problèmes, réinitialisez les conteneurs et les volumes 
 docker-compose down --volumes
 docker-compose up --build
 ```
-
-### Sécurité
-Ne divulguez jamais vos informations sensibles telles que les mots de passe dans votre dépôt GitHub. Assurez-vous que le fichier .env est bien inclus dans .gitignore.
-
 ### Mises à Jour des Dépendances
 Régulièrement, mettez à jour vos dépendances avec Poetry pour bénéficier des dernières fonctionnalités et correctifs de sécurité :
 ```bash
@@ -199,12 +188,5 @@ poetry update
 - Utilisez le cache Docker efficacement en structurant votre Dockerfile de manière à minimiser les rebuilds inutiles
 - Évitez de copier tout le répertoire du projet avant d'installer les dépendances, cela permet de profiter du cache Docker pour les dépendances qui ne changent pas souvent
 
-## 5. Licence
-
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
-
----
-
-Merci d'avoir utilisé Housing API ! 😊  
+Merci d'avoir utilisé Housing API ! 😊 
 N'hésitez pas à ouvrir des issues ou des pull requests si vous avez des suggestions ou des améliorations à proposer.
->>>>>>> 8e17167 (Initial commit)
