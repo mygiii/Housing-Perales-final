@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  housing_model:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: housing_model_container
+    ports:
+      - "8001:8001"
+    command: >
+      sh -c "
+      python train.py &&
+      uvicorn main:app --host 0.0.0.0 --port 8001
+      "
+    depends_on:
+      - mlflow
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    container_name: mlflow_container
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns

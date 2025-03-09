@@ -1,0 +1,113 @@
+services:
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:latest
+    container_name: broker
+    hostname: broker
+    ports:
+      - "9092:9092"
+    environment:
+    
+      KAFKA_NODE_ID: 1 # Identifiant du nœud Kafka
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT" # Configuration des protocoles de sécurité des listeners
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker:9092,PLAINTEXT_HOST://broker:29092" # Listeners annoncés pour Kafka
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # Facteur de réplication pour le topic des offsets
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # Délai initial de rééquilibrage du groupe
+      KAFKA_PROCESS_ROLES: "broker,controller" # Rôles du processus Kafka
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093" # Votants du quorum du contrôleur
+      KAFKA_LISTENERS: "PLAINTEXT://broker:9092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:29092" # Listeners pour Kafka
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT" # Nom du listener inter-broker
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER" # Noms des listeners du contrôleur
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs" # Répertoires de logs de Kafka
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk" # Identifiant du cluster Kafka
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # Active la création automatique des topics
+    healthcheck:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "broker:9092"]
+      interval: 20s
+      timeout: 20s
+      retries: 5
+
+  db:
+    image: postgres:latest
+    container_name: postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./init-db-2.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  
+  api:
+    build:
+      context : ./housing-api
+    container_name: api
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/housing_db
+  
+  #model
+  housing_model:
+    build:
+      context: ./housing-model 
+      dockerfile: Dockerfile
+    container_name: housing_model_container
+    ports:
+      - "8001:8001"
+    command: >
+      sh -c "
+      python train.py &&
+      uvicorn main:app --host 0.0.0.0 --port 8001
+      "
+    depends_on:
+      - mlflow
+
+  mlflow:
+    build:
+      context: ./housing-model # Construit l'image à partir du Dockerfile dans le répertoire housing-model
+      dockerfile: Dockerfile.mlflow
+    container_name: mlflow_container
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+  consumer:
+    build: ./housing-kafka # Construit l'image à partir du Dockerfile dans le répertoire housing-consumer
+    container_name: housing_consumer
+    depends_on:
+      - api # Dépend du service api
+      - broker # Dépend du service broker
+    environment:
+      KAFKA_BROKER: "broker:29092" # Adresse du broker Kafka
+      KAFKA_TOPIC: "housing_topic" # Nom du topic Kafka
+      API_ENDPOINT: "http://housing_api:8000/houses" # Endpoint de l'API
+
+volumes:
+  postgres_data: # Volume pour persister les données de la base de données PostgreSQL

@@ -1,30 +1,19 @@
-# Dockerfile
+FROM python:3.12
 
-FROM python:3.11-slim
+# Update packages and install necessary system dependencies
+RUN apt-get update && apt-get install -y gcc libpq-dev
 
 WORKDIR /app
 
-# Installer les dépendances système nécessaires
-RUN apt-get update && apt-get install -y build-essential
+# Copy the requirements file and install dependencies
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier les fichiers nécessaires pour Poetry
-COPY pyproject.toml poetry.lock ./
+# Copy the app directory into the container
+COPY /app/ .
 
-# Installer Poetry
-RUN pip install --upgrade pip
-RUN pip install poetry
-
-# Désactiver la création d'environnements virtuels
-RUN poetry config virtualenvs.create false
-
-# Installer les dépendances
-RUN poetry install --no-interaction --no-ansi --no-root
-
-# Copier le reste du code (train_model.py, predict_api.py, etc.)
-COPY . .
-
-# Créer un dossier pour le modèle si nécessaire
-RUN mkdir -p /app/model
-
-# Exposer le port de l'API
+# Expose port 8000 to access the API
 EXPOSE 8001
+
+# Start the FastAPI application using Uvicorn
+CMD ["uvicorn app.train.py:app --host 0.0.0.0 --port 8001"]
